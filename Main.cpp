@@ -2,9 +2,7 @@
 #include "mycircle.h"
 #include "window_def.h"
 #include "naive.h"
-//#include "qtree_normal.h"
-#include "qtree_extra2.h"
-//#include "qtree_normal_refine.h"
+#include "qtree_normal_refine.h"
 
 static inline const int N_LEN = 5;
 static inline constexpr int N_list[N_LEN] = { 100, 1000, 5000, 10000, 15000 };
@@ -35,7 +33,7 @@ void Main()
 	uint64_t total_time = 0;
 	uint64_t total_frame = 0;
 
-	QTreeEx2::QTreeEx2<MyObject> qtree_ex2;
+	QTreeRefine::QTreeRefine<MyObject, 3> qtree;
 
 	while (System::Update())
 	{
@@ -73,35 +71,19 @@ void Main()
 		//NaiveTest(obj_for_naive, N);
 
 		/*
-		* 18000 microsec per frame with N = 15000
-		* 7400 microsec per frame with N = 10000
-		* 1800 microsec per frame with N = 5000
-		* 130 microsec per frame with N = 1000
-		* 12 microsec per frame with N = 100
-		* 四分木を毎フレーム構築し直し、ポインタ配列で管理されているとする
-		*/
-		/*
-		QTreeRefine::QTreeRefine<MyObject, 3> qtree;
-		for (int i = 0; i < N; i++) {
-			qtree.Push(obj_for_qtree[i].get());
-		}
-		qtree.HitTest();
-		//*/
-
-		/*
 		* 13500 microsec per frame with N = 15000
 		* 5300 microsec per frame with N = 10000
 		* 1200 microsec per frame with N = 5000
 		* 70 microsec per frame with N = 1000
 		* 5 microsec per frame with N = 100
-		* 木を作り直す際に、オブジェクトは使いまわす & 配列キャッシュver
+		* 木を作り直す際に、オブジェクトは使いまわす
 		*/
 		///*
-		qtree_ex2.cleanup();
+		qtree.Cleanup();
 		for (int i = 0; i < N; i++) {
-			qtree_ex2.Push(obj_for_qtree[i].get());
+			qtree.Push(obj_for_qtree[i].get());
 		}
-		qtree_ex2.HitTest();
+		qtree.HitTest();
 		//*/
 
 		total_time += Time::GetMicrosec() - t;

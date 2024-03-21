@@ -41,30 +41,39 @@ namespace QTreeRefine {
 			this->cell[id].push_back(obj);
 		}
 
+		void Cleanup()
+		{
+			for (int i = 0; i < sum_of_tree(MAX_D); i++) {
+				//cell[i].resize(0);
+				cell[i].clear();
+			}
+		}
+
 	private:
 		/*
 		 * 深さdepthでz値がz_valueを持つセルに登録されたオブジェクトに対して衝突判定を行う
 		 */
-		void HitTest(uint64_t depth, uint64_t z_value, std::deque<T*>& deq)
+		void HitTest(uint64_t depth, uint64_t z_value, std::vector<T*>& stack)
 		{
 			const uint64_t id = GetCellID(depth, z_value);
 			const std::vector<T*>& lst = cell[id];
+			const uint64_t lst_size = lst.size();
 
 			// 衝突判定をしていく
-			for (int i = 0; i < lst.size(); i++) {
+			for (int i = 0; i < lst_size; i++) {
 				T* const p1 = lst[i];
 				const auto c1 = p1->GetCircle();
 
 				// スタックとセル
-				for (int j = 0; j < deq.size(); j++) {
-					const auto c2 = deq[j]->GetCircle();
+				for (int j = 0; j < stack.size(); j++) {
+					const auto c2 = stack[j]->GetCircle();
 					if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
 						p1->hit_count++;
-						deq[j]->hit_count++;
+						stack[j]->hit_count++;
 					}
 				}
 				// セル同士
-				for (int j = i + 1; j < lst.size(); j++) {
+				for (int j = i + 1; j < lst_size; j++) {
 					const auto c2 = lst[j]->GetCircle();
 					if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
 						p1->hit_count++;
@@ -79,18 +88,16 @@ namespace QTreeRefine {
 
 			// スタックに積む
 			for (int i = 0; i < lst.size(); i++) {
-				deq.push_back(lst[i]);
+				stack.push_back(lst[i]);
 			}
 
 			// 子空間へ再帰
 			for (uint8 i = 0; i < 4; i++) {
-				this->HitTest(depth + 1, (z_value << 2) + i, deq);
+				this->HitTest(depth + 1, (z_value << 2) + i, stack);
 			}
 			// スタックから降ろす
-			// TODO: resize()のほうがいいかもしれない
-			const uint64_t size = lst.size();
-			for (int i = 0; i < size; i++) {
-				deq.pop_back();
+			for (int i = 0; i < lst_size; i++) {
+				stack.pop_back();
 			}
 			return;
 		}
@@ -101,17 +108,17 @@ namespace QTreeRefine {
 		 */
 		void HitTest()
 		{
-			std::deque<T*> deq;
-			this->HitTest(0, 0, deq);
+			std::vector<T*> stack;
+			this->HitTest(0, 0, stack);
 		}
 
 	private:
 		std::vector<T*> cell[sum_of_tree(MAX_D)]; // tree of vector<T*>
 
 		// 深さとz値からセル番号を得る
-		static constexpr uint64 GetCellID(uint64_t L, uint64_t idx)
+		static constexpr uint64 GetCellID(uint64_t depth, uint64_t z_value)
 		{
-			return  offset[L] + idx;
+			return  offset[depth] + z_value;
 		}
 
 		// 最大16bitの入力を、bitを一つ飛ばしにして出力する。

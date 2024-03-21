@@ -815,13 +815,7 @@
     <ClInclude Include="mycircle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="qtree_normal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="window_def.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="qtree_extra2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="qtree_normal_refine.h">
