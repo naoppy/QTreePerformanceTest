@@ -56,6 +56,7 @@ namespace QTreeEx2 {
 	class QTreeEx2
 	{
 	private:
+		/*
 		class MyVector
 		{
 		private:
@@ -109,7 +110,8 @@ namespace QTreeEx2 {
 				// never shrink
 			}
 			uint64_t size() const { return _size; }
-		};
+		};*/
+	using MyVector = std::vector<T*>;
 	public:
 		void Push(T* obj)
 		{
