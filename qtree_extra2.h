@@ -48,7 +48,7 @@ static inline const uint64 normal_offset[4] = { 0, 1, 5, 21 };
  * expiredの確認を大幅に省いた
  * floorを高速化
  * 配列キャッシュを使用
- * deque, listをiteratorにしてT*型に変更
+ * deque, listをvectorにしてT*型に変更
  */
 template <typename T>
 class QTreeEx2

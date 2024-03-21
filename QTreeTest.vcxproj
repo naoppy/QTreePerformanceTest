@@ -116,7 +116,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="qtree_normal.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -331,6 +330,7 @@
     <ClInclude Include="qtree_extra.h" />
     <ClInclude Include="qtree_extra2.h" />
     <ClInclude Include="qtree_normal.h" />
+    <ClInclude Include="qtree_normal_refine.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="window_def.h" />
   </ItemGroup>

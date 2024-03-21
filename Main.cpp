@@ -6,9 +6,9 @@
 // #include "qtree_extra.h"
 #include "qtree_extra2.h"
 
-inline const int N_LEN = 5;
-inline constexpr int N_list[N_LEN] = {100, 1000, 5000, 10000, 15000};
-inline constexpr int N_MAX = N_list[N_LEN - 1];
+static inline const int N_LEN = 5;
+static inline constexpr int N_list[N_LEN] = {100, 1000, 5000, 10000, 15000};
+static inline constexpr int N_MAX = N_list[N_LEN - 1];
 
 void Main()
 {
