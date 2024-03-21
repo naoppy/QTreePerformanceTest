@@ -55,6 +55,61 @@ namespace QTreeEx2 {
 	template <typename T>
 	class QTreeEx2
 	{
+	private:
+		class MyVector
+		{
+		private:
+			T** _data;
+			uint64_t _size;
+			uint64_t _capacity;
+		public:
+			MyVector() : _data(nullptr), _size(0), _capacity(0) {}
+			~MyVector() { delete[] _data; }
+			MyVector(const MyVector& other) = delete;
+			MyVector& operator=(const MyVector& other) = delete;
+			MyVector(MyVector&& other)
+				: _data(other._data), _size(other._size), _capacity(other._capacity)
+			{
+				other._data = nullptr;
+				other._size = 0;
+				other._capacity = 0;
+			}
+			MyVector& operator=(MyVector&& other)
+			{
+				if (this != &other) {
+					delete[] _data;
+					_data = other._data;
+					_size = other._size;
+					_capacity = other._capacity;
+					other._data = nullptr;
+					other._size = 0;
+					other._capacity = 0;
+				}
+				return *this;
+			}
+			T* operator[](uint64_t i) const { return _data[i]; }
+			void push_back(T* obj)
+			{
+				if (_size == _capacity) {
+					_capacity = _capacity == 0 ? 1 : _capacity * 2;
+					T** new_data = new T*[_capacity];
+					for (uint64_t i = 0; i < _size; i++) {
+						new_data[i] = _data[i];
+					}
+					delete[] _data;
+					_data = new_data;
+				}
+				_data[_size++] = obj;
+			}
+			void resize(uint64_t new_size)
+			{
+				if (new_size < _size) {
+					_size = new_size;
+				}
+				// never shrink
+			}
+			uint64_t size() const { return _size; }
+		};
 	public:
 		void Push(T* obj)
 		{
@@ -63,7 +118,7 @@ namespace QTreeEx2 {
 			this->cell[id].push_back(obj);
 		}
 
-		void Cleanup()
+		void cleanup()
 		{
 			for (int i = 0; i < sum_of_tree(MAX_D); i++) {
 				cell[i].resize(0);
@@ -71,10 +126,10 @@ namespace QTreeEx2 {
 		}
 
 	private:
-		void HitTest(uint64_t depth, uint64_t z_value, std::deque<T*>& deq)
+		void HitTest(uint64_t depth, uint64_t z_value, MyVector& deq)
 		{
 			const uint64_t id = GetCellID(depth, z_value);
-			const std::vector<T*>& lst = cell[id];
+			const MyVector& lst = cell[id];
 
 			// 衝突判定をしていく
 			for (int i = 0; i < lst.size(); i++) {
@@ -113,23 +168,19 @@ namespace QTreeEx2 {
 				this->HitTest(depth + 1, (z_value << 2) + i, deq);
 			}
 			// スタックから降ろす
-			// TODO: resize()のほうがいいかもしれない
 			const uint64_t size = lst.size();
-			for (int i = 0; i < size; i++) {
-				deq.pop_back();
-			}
-			//deq.resize(deq.size() - size);
+			deq.resize(deq.size() - size);
 			return;
 		}
 
 	public:
 		void HitTest() {
-			std::deque<T*> deq;
+			MyVector deq;
 			this->HitTest(0, 0, deq);
 		}
 
 	private:
-		std::vector<T*> cell[sum_of_tree(MAX_D)];
+		MyVector cell[sum_of_tree(MAX_D)];
 
 		// 深さとz値からセル番号を得る
 		static constexpr uint64 GetCellID(uint64 depth, uint64 idx)
@@ -139,8 +190,8 @@ namespace QTreeEx2 {
 
 		// 円からセル番号を得る
 		static uint64 GetCellID(float x1, float y1, float x2, float y2) {
-			constexpr float DX = (float)WIN_H / 8;
-			constexpr float DY = (float)WIN_W / 8;
+			constexpr float DX = static_cast<float>(WIN_W) / MAX_SPLIT(MAX_D);
+			constexpr float DY = static_cast<float>(WIN_H) / MAX_SPLIT(MAX_D);
 			constexpr int64 MAX_SPLIT_NUM = MAX_SPLIT(MAX_D);
 
 			auto ix1 = (int64)(x1 / DX);

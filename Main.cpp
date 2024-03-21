@@ -35,7 +35,7 @@ void Main()
 	uint64_t total_time = 0;
 	uint64_t total_frame = 0;
 
-	//QTreeEx2::QTreeEx2<MyObject> qtree_ex2;
+	QTreeEx2::QTreeEx2<MyObject> qtree_ex2;
 
 	while (System::Update())
 	{
@@ -89,15 +89,15 @@ void Main()
 		//*/
 
 		/*
-		* 21000 microsec per frame with N = 15000
-		* 9000 microsec per frame with N = 10000
-		* 2000 microsec per frame with N = 1000
-		*  microsec per frame with N = 100
+		* 13500 microsec per frame with N = 15000
+		* 5300 microsec per frame with N = 10000
+		* 1200 microsec per frame with N = 5000
+		* 70 microsec per frame with N = 1000
+		* 5 microsec per frame with N = 100
 		* 木を作り直す際に、オブジェクトは使いまわす & 配列キャッシュver
 		*/
 		///*
-		QTreeEx2::QTreeEx2<MyObject> qtree_ex2;
-		//qtree_ex2.Cleanup();
+		qtree_ex2.cleanup();
 		for (int i = 0; i < N; i++) {
 			qtree_ex2.Push(obj_for_qtree[i].get());
 		}
