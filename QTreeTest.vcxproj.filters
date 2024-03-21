@@ -821,9 +821,6 @@
     <ClInclude Include="window_def.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="qtree_extra.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="qtree_extra2.h">
       <Filter>Header Files</Filter>
     </ClInclude>

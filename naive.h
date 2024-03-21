@@ -2,9 +2,8 @@
 
 #include "mycircle.h"
 
-void NaiveTest(std::vector<MyObject>& obj) {
+void NaiveTest(std::vector<MyObject>& obj, int32_t N) {
 	// hittest
-	const uint64 N = obj.size();
 	for (int i = 0; i < N; i++) {
 		const auto& c1 = obj[i].GetCircle();
 		for (int j = i + 1; j < N; j++) {

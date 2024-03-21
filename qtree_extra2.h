@@ -3,159 +3,164 @@
 #include "window_def.h"
 #include "mycircle.h"
 
-static inline const uint64 MAX_D = 3;
-static inline const uint64 MAX_SPRIT = 2 * (MAX_D + 1);
+namespace QTreeEx2 {
 
-static constexpr uint64 sum_of_tree(const uint64 depth) {
-	return ((1ULL << (2 * depth + 2)) - 1) / 3;
-}
+	static inline const uint8 MAX_D = 3;
 
-static inline constexpr uint64 CELL_NUM = sum_of_tree(MAX_D);
-
-static inline const float DX = (float)WIN_W / MAX_SPRIT;
-static inline const float DY = (float)WIN_H / MAX_SPRIT;
-
-static inline const uint8 z[CELL_NUM][CELL_NUM] = {
-	{0, 1, 4, 5, 16, 17, 20, 21},
-	{2, 3, 6, 7, 18, 19, 22, 23},
-	{8, 9, 12, 13, 24, 25, 28, 29},
-	{10, 11, 14, 15, 26, 27, 30, 31},
-	{32, 33, 36, 37, 48, 49, 52, 53},
-	{34, 35, 38, 39, 50, 51, 54, 55},
-	{40, 41, 44, 45, 56, 57, 60, 61},
-	{42, 43, 46, 47, 58, 59, 62, 63},
-};
-
-static inline const uint8 shift[8] = {
-	0, 2, 4, 4,
-	6, 6, 6, 6,
-};
-
-static inline const uint8 L[8] = {
-	3, 2, 1, 1,
-	0, 0, 0, 0,
-};
-
-// 0, 1, 5, 21
-static inline const uint8 offset[8] = {
-	21, 5, 1, 1, 0, 0, 0, 0
-};
-
-static inline const uint64 normal_offset[4] = { 0, 1, 5, 21 };
-
-/*
- * 変更点: std::listにした
- * expiredの確認を大幅に省いた
- * floorを高速化
- * 配列キャッシュを使用
- * deque, listをvectorにしてT*型に変更
- */
-template <typename T>
-class QTreeEx2
-{
-public:
-	void Push(T* obj)
-	{
-		const auto c = obj->GetCircle();
-		const auto id = GetCellID(c.x, c.y, c.r);
-		this->cell[id].push_back(obj);
+	// 最大深さdepthの四分木のセル数, 1 + 4 + 16 + ... + 4^depth = {(2^2)^(depth+1)) - 1} / 3
+	static constexpr uint64_t sum_of_tree(const uint64_t depth) {
+		return ((((uint64_t)1) << (2 * depth + 2)) - 1) / 3;
 	}
 
-	void Update() {
-		// TODO
+	// calc 2^depth, 最大深さdepthの四分木の一辺の分割数に相当
+	static constexpr uint64_t MAX_SPLIT(const uint64_t depth) {
+		return ((uint64_t)1) << depth;
 	}
 
-private:
-	void HitTest(uint8_t depth, uint8 z_value, std::vector<T*>& deq)
+	static inline const uint64 z[MAX_SPLIT(MAX_D)][MAX_SPLIT(MAX_D)] = {
+		{0, 1, 4, 5, 16, 17, 20, 21},
+		{2, 3, 6, 7, 18, 19, 22, 23},
+		{8, 9, 12, 13, 24, 25, 28, 29},
+		{10, 11, 14, 15, 26, 27, 30, 31},
+		{32, 33, 36, 37, 48, 49, 52, 53},
+		{34, 35, 38, 39, 50, 51, 54, 55},
+		{40, 41, 44, 45, 56, 57, 60, 61},
+		{42, 43, 46, 47, 58, 59, 62, 63},
+	};
+
+	static inline const uint64 shift[8] = {
+		0, 2, 4, 4,
+		6, 6, 6, 6,
+	};
+
+	static inline const uint64 L[8] = {
+		3, 2, 1, 1,
+		0, 0, 0, 0,
+	};
+
+	// 0, 1, 5, 21
+	static inline const uint64 offset[8] = {
+		21, 5, 1, 1, 0, 0, 0, 0
+	};
+
+	static inline const uint64 normal_offset[4] = { 0, 1, 5, 21 };
+
+	/*
+	 * 分割数 8x8固定の四分木
+	 * T*を扱い毎フレーム構築
+	 * floorを高速化
+	 * z値、MSBの計算に配列キャッシュを使用
+	 * deque, listは自作のvectorを使用
+	 */
+	template <typename T>
+	class QTreeEx2
 	{
-		const uint64_t id = GetCellID(depth, z_value);
-		const std::vector<T*>& lst = cell[id];
+	public:
+		void Push(T* obj)
+		{
+			const auto c = obj->GetCircle();
+			const uint64 id = GetCellID(c.x - c.r, c.y - c.r, c.x + c.r, c.y + c.r);
+			this->cell[id].push_back(obj);
+		}
 
-		// 衝突判定をしていく
-		for (int i = 0; i < lst.size(); i++) {
-			T* const p1 = lst[i];
-			const auto c1 = p1->GetCircle();
-
-			// スタックとセル
-			for (int j = 0; j < deq.size(); j++) {
-				const auto c2 = deq[j]->GetCircle();
-				if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
-					p1->hit_count++;
-					deq[j]->hit_count++;
-				}
-			}
-			// セル同士
-			for (int j = i + 1; j < lst.size(); j++) {
-				const auto c2 = lst[j]->GetCircle();
-				if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
-					p1->hit_count++;
-					lst[j]->hit_count++;
-				}
+		void Cleanup()
+		{
+			for (int i = 0; i < sum_of_tree(MAX_D); i++) {
+				cell[i].resize(0);
 			}
 		}
 
-		// 深さが最大なら終了
-		if (depth == MAX_D)
+	private:
+		void HitTest(uint64_t depth, uint64_t z_value, std::deque<T*>& deq)
+		{
+			const uint64_t id = GetCellID(depth, z_value);
+			const std::vector<T*>& lst = cell[id];
+
+			// 衝突判定をしていく
+			for (int i = 0; i < lst.size(); i++) {
+				T* const p1 = lst[i];
+				const auto c1 = p1->GetCircle();
+
+				// スタックとセル
+				for (int j = 0; j < deq.size(); j++) {
+					const auto c2 = deq[j]->GetCircle();
+					if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
+						p1->hit_count++;
+						deq[j]->hit_count++;
+					}
+				}
+				// セル同士
+				for (int j = i + 1; j < lst.size(); j++) {
+					const auto c2 = lst[j]->GetCircle();
+					if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
+						p1->hit_count++;
+						lst[j]->hit_count++;
+					}
+				}
+			}
+
+			// 深さが最大なら終了
+			if (depth == MAX_D)
+				return;
+
+			// スタックに積む
+			for (int i = 0; i < lst.size(); i++) {
+				deq.push_back(lst[i]);
+			}
+
+			// 子空間へ再帰
+			for (uint64 i = 0; i < 4; i++) {
+				this->HitTest(depth + 1, (z_value << 2) + i, deq);
+			}
+			// スタックから降ろす
+			// TODO: resize()のほうがいいかもしれない
+			const uint64_t size = lst.size();
+			for (int i = 0; i < size; i++) {
+				deq.pop_back();
+			}
+			//deq.resize(deq.size() - size);
 			return;
-
-		// スタックに積む
-		for (int i = 0; i < lst.size(); i++) {
-			deq.push_back(lst[i]);
 		}
 
-		// 子空間へ再帰
-		for (uint8 i = 0; i < 4; i++) {
-			this->HitTest(depth + 1, (z_value << 2) + i, deq);
+	public:
+		void HitTest() {
+			std::deque<T*> deq;
+			this->HitTest(0, 0, deq);
 		}
-		// スタックから降ろす
-		// TODO: resize()のほうがいいかもしれない
-		const uint64_t size = lst.size();
-		for (int i = 0; i < size; i++) {
-			deq.pop_back();
+
+	private:
+		std::vector<T*> cell[sum_of_tree(MAX_D)];
+
+		// 深さとz値からセル番号を得る
+		static constexpr uint64 GetCellID(uint64 depth, uint64 idx)
+		{
+			return  normal_offset[depth] + idx;
 		}
-		return;
-	}
 
-public:
-	// 衝突判定は前に、UpdateReferenceを呼び出しておくこと
-	void HitTest() {
-		std::vector<T*> deq;
-		const uint8 zero = 0;
-		this->HitTest(zero, zero, deq);
-	}
+		// 円からセル番号を得る
+		static uint64 GetCellID(float x1, float y1, float x2, float y2) {
+			constexpr float DX = (float)WIN_H / 8;
+			constexpr float DY = (float)WIN_W / 8;
+			constexpr int64 MAX_SPLIT_NUM = MAX_SPLIT(MAX_D);
 
-private:
-	std::vector<T*> cell[CELL_NUM];
-
-	// 深さとz値からセル番号を得る
-	static constexpr uint64 GetCellID(uint64 depth, uint64 idx)
-	{
-		return  normal_offset[depth] + idx;
-	}
-
-	static uint64 GetCellID(float x, float y, float r) {
-		auto ix1 = (uint8)((x - r) / DX);
-		auto ix2 = (uint8)((x + r) / DX);
-		if (ix1 < 0 || ix2 >= MAX_SPRIT) {
-			ix1 = ix1 < 0 ? 0 : ix1 >= MAX_SPRIT ? MAX_SPRIT - 1 : ix1;
-			ix2 = ix2 < 0 ? 0 : ix2 >= MAX_SPRIT ? MAX_SPRIT - 1 : ix2;
+			auto ix1 = (int64)(x1 / DX);
+			auto ix2 = (int64)(x2 / DX);
+			auto iy1 = (int64)(y1 / DY);
+			auto iy2 = (int64)(y2 / DY);
+			if (ix1 < 0 || ix2 >= MAX_SPLIT_NUM) {
+				ix1 = ix1 < 0 ? 0 : ix1 >= MAX_SPLIT_NUM ? MAX_SPLIT_NUM - 1 : ix1;
+				ix2 = ix2 < 0 ? 0 : ix2 >= MAX_SPLIT_NUM ? MAX_SPLIT_NUM - 1 : ix2;
+			}
+			if (iy1 < 0 || iy2 >= MAX_SPLIT_NUM) {
+				iy1 = iy1 < 0 ? 0 : iy1 >= MAX_SPLIT_NUM ? MAX_SPLIT_NUM - 1 : iy1;
+				iy2 = iy2 < 0 ? 0 : iy2 >= MAX_SPLIT_NUM ? MAX_SPLIT_NUM - 1 : iy2;
+			}
+			const uint64 ix = ix1 xor ix2;
+			const uint64 iy = iy1 xor iy2;
+			uint64 ixy = ix | iy;
+			uint64 ret = z[ix1][iy1];
+			return offset[ixy] + (ret >> shift[ixy]);
 		}
-		auto iy1 = (uint8)((y - r) / DY);
-		auto iy2 = (uint8)((y + r) / DY);
-		if (iy1 < 0 || iy2 >= MAX_SPRIT) {
-			iy1 = iy1 < 0 ? 0 : iy1 >= MAX_SPRIT ? MAX_SPRIT - 1 : iy1;
-			iy2 = iy2 < 0 ? 0 : iy2 >= MAX_SPRIT ? MAX_SPRIT - 1 : iy2;
-		}
-		return GetCellID(ix1, iy1, ix2, iy2);
-	}
+	};
 
-	// 対角の2点からセル番号を得る
-	static uint64 GetCellID(uint8 ix1, uint8 iy1, uint8 ix2, uint8 iy2)
-	{
-		const uint64 x = ix1 xor ix2;
-		const uint64 y = iy1 xor iy2;
-		uint64 xy = x | y;
-		uint64 ret = z[ix1][iy1];
-		return offset[xy] + (ret >> shift[xy]);
-	}
-};
+} // namespace QTreeEx2

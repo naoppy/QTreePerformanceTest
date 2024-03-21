@@ -2,12 +2,12 @@
 #include "mycircle.h"
 #include "window_def.h"
 #include "naive.h"
-// #include "qtree_normal.h"
-// #include "qtree_extra.h"
+//#include "qtree_normal.h"
 #include "qtree_extra2.h"
+//#include "qtree_normal_refine.h"
 
 static inline const int N_LEN = 5;
-static inline constexpr int N_list[N_LEN] = {100, 1000, 5000, 10000, 15000};
+static inline constexpr int N_list[N_LEN] = { 100, 1000, 5000, 10000, 15000 };
 static inline constexpr int N_MAX = N_list[N_LEN - 1];
 
 void Main()
@@ -30,10 +30,12 @@ void Main()
 		obj_for_qtree.push_back(std::move(std::make_shared<MyObject>(x, y, r)));
 	}
 	int now_idx = 0;
-	const RectF button{ Arg::center(Scene::CenterF().x, Scene::CenterF().y), 50};
+	const RectF button{ Arg::center(Scene::CenterF().x, Scene::CenterF().y), 50 };
 
 	uint64_t total_time = 0;
 	uint64_t total_frame = 0;
+
+	//QTreeEx2::QTreeEx2<MyObject> qtree_ex2;
 
 	while (System::Update())
 	{
@@ -61,49 +63,47 @@ void Main()
 		 */
 
 		/*
-		 * ナイーブな手法では、オブジェクトがvectorで管理されているとしておく
-		 * 30000 microsec per frame with N = 10000
-		 * 9100 microsec per frame with N = 5000
-		 * 400 microsec per frame with N = 1000
-		 * 5 microsec per frame with N = 100
-		 */
-		//NaiveTest(obj_for_naive);
+		* ナイーブな手法では、オブジェクトがvectorで管理されているとしておく
+		* 80000 microsec per frame with N = 15000
+		* 36000 microsec per frame with N = 10000
+		* 9000 microsec per frame with N = 5000
+		* 360 microsec per frame with N = 1000
+		* 5 microsec per frame with N = 100
+		*/
+		//NaiveTest(obj_for_naive, N);
 
-		
 		/*
-		 * 14000 microsec per frame with N = 10000
-		 * 3500 microsec per frame with N = 5000
-		 * 250 microsec per frame with N = 1000
-		 * 24 microsec per frame with N = 100
-		 * 四分木の場合、オブジェクトはvector of weak_ptrで管理されているとする
-		 */
-		///*
+		* 18000 microsec per frame with N = 15000
+		* 7400 microsec per frame with N = 10000
+		* 1800 microsec per frame with N = 5000
+		* 130 microsec per frame with N = 1000
+		* 12 microsec per frame with N = 100
+		* 四分木を毎フレーム構築し直し、ポインタ配列で管理されているとする
+		*/
 		/*
-		QTreeEx<MyObject> qtree;
+		QTreeRefine::QTreeRefine<MyObject, 3> qtree;
 		for (int i = 0; i < N; i++) {
 			qtree.Push(obj_for_qtree[i].get());
 		}
-		qtree.UpdateReference();
 		qtree.HitTest();
 		//*/
 
 		/*
-		 * 15000 microsec per frame with N = 15000
-		 * 6000 microsec per frame with N = 10000
-		 * 1800 microsec per frame with N = 5000
-		 * 150 microsec per frame with N = 1000
-		 * 20 microsec per frame with N = 100
-		 * 四分木を毎フレーム構築し直し、ポインタ配列で管理されているとする
-		 */
-		 ///*
-		 ///*
-		 QTreeEx2<MyObject> qtree;
-		 for (int i = 0; i < N; i++) {
-			 qtree.Push(obj_for_qtree[i].get());
-		 }
-		 qtree.HitTest();
-		 //*/
-		
+		* 21000 microsec per frame with N = 15000
+		* 9000 microsec per frame with N = 10000
+		* 2000 microsec per frame with N = 1000
+		*  microsec per frame with N = 100
+		* 木を作り直す際に、オブジェクトは使いまわす & 配列キャッシュver
+		*/
+		///*
+		QTreeEx2::QTreeEx2<MyObject> qtree_ex2;
+		//qtree_ex2.Cleanup();
+		for (int i = 0; i < N; i++) {
+			qtree_ex2.Push(obj_for_qtree[i].get());
+		}
+		qtree_ex2.HitTest();
+		//*/
+
 		total_time += Time::GetMicrosec() - t;
 
 		// draw
