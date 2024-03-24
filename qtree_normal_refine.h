@@ -75,10 +75,16 @@ namespace QTree {
 		 * T型のオブジェクト同士の衝突判定を行う
 		 * 最大 2^16 x 2^16 までの分割(=MAX_D <=15)に対応
 		 */
-		template <unsigned int MAX_D, typename T, MyCircle(T::* member_func)() const, void (*hit_func)(T*, T*)>
+		template <unsigned int MAX_D, typename T, MyCircle(T::* member_func)() const>
 		class QTreeRefine
 		{
+		private:
+			typedef std::function<void(T*, T*)> HitFunc;
+			
 		public:
+			QTreeRefine(HitFunc hit_func)
+				: hit_func(hit_func) {}
+
 			/*
 			 * オブジェクトを四分木に登録する
 			 */
@@ -160,6 +166,7 @@ namespace QTree {
 
 		private:
 			std::vector<T*> node[sum_of_tree(MAX_D)]; // tree of vector<T*>
+			HitFunc hit_func;
 
 			// 対角の2点からノード番号を得る
 			// (x1, y1) <= (x2, y2)とする

@@ -8,10 +8,15 @@ namespace QTree::A2B {
 	 * A型とB型との衝突判定を行う
 	 * 最大 2^16 x 2^16 までの分割(=MAX_D <=15)に対応
 	 */
-	template <unsigned int MAX_D, typename A, MyCircle(A::* a_member_func)() const, typename B, MyCircle(B::* b_member_func)() const, void (*hit_func)(A*, B*)>
+	template <unsigned int MAX_D, typename A, MyCircle(A::* a_member_func)() const, typename B, MyCircle(B::* b_member_func)() const>
 	class QTreeA2B
 	{
+	private:
+		typedef std::function<void(A*, B*)> HitFunc;
 	public:
+		QTreeA2B(HitFunc hit_func)
+			: hit_func(hit_func) {}
+
 		/*
 		 * A型オブジェクトを四分木に登録する
 		 */
@@ -127,6 +132,7 @@ namespace QTree::A2B {
 	private:
 		std::vector<A*> a_node[sum_of_tree(MAX_D)];
 		std::vector<B*> b_node[sum_of_tree(MAX_D)];
+		HitFunc hit_func;
 
 		// 対角の2点からノード番号を得る
 		// (x1, y1) <= (x2, y2)とする

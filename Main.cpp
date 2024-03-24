@@ -10,11 +10,6 @@ static inline constexpr int N_MAX = N_list[N_LEN - 1];
 
 using QTree::A2A::QTreeRefine;
 
-static void hit_func(MyObject* t1, MyObject* t2) {
-	t1->hit_count++;
-	t2->hit_count++;
-};
-
 void Main()
 {
 	Window::Resize(WIN_W, WIN_H);
@@ -40,7 +35,10 @@ void Main()
 	uint64_t total_time = 0;
 	uint64_t total_frame = 0;
 
-	QTreeRefine < 3, MyObject, &MyObject::GetCircle, &hit_func> qtree;
+	QTreeRefine < 3, MyObject, &MyObject::GetCircle> qtree([](MyObject* a, MyObject* b) {
+		a->hit_count++;
+		b->hit_count++;
+	});
 
 	while (System::Update())
 	{
