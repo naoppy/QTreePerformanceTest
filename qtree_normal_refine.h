@@ -5,7 +5,7 @@
 
 namespace QTreeRefine {
 
-	// 最大深さdepthの四分木のセル数, 1 + 4 + 16 + ... + 4^depth = {(2^2)^(depth+1)) - 1} / 3
+	// 最大深さdepthの四分木のノード数, 1 + 4 + 16 + ... + 4^depth = {(2^2)^(depth+1)) - 1} / 3
 	static constexpr uint64_t sum_of_tree(const uint64_t depth) {
 		return ((((uint64_t)1) << (2 * depth + 2)) - 1) / 3;
 	}
@@ -37,26 +37,26 @@ namespace QTreeRefine {
 		void Push(T* obj)
 		{
 			const auto c = obj->GetCircle();
-			const auto id = GetCellID(c.x - c.r, c.y - c.r, c.x + c.r, c.y + c.r);
-			this->cell[id].push_back(obj);
+			const auto id = GetNodeID(c.x - c.r, c.y - c.r, c.x + c.r, c.y + c.r);
+			this->node[id].push_back(obj);
 		}
 
 		void Cleanup()
 		{
 			for (int i = 0; i < sum_of_tree(MAX_D); i++) {
-				//cell[i].resize(0);
-				cell[i].clear();
+				//node[i].resize(0);
+				node[i].clear();
 			}
 		}
 
 	private:
 		/*
-		 * 深さdepthでz値がz_valueを持つセルに登録されたオブジェクトに対して衝突判定を行う
+		 * 深さdepthでz値がz_valueを持つノードに登録されたオブジェクトに対して衝突判定を行う
 		 */
 		void HitTest(uint64_t depth, uint64_t z_value, std::vector<T*>& stack)
 		{
-			const uint64_t id = GetCellID(depth, z_value);
-			const std::vector<T*>& lst = cell[id];
+			const uint64_t id = GetNodeID(depth, z_value);
+			const std::vector<T*>& lst = node[id];
 			const uint64_t lst_size = lst.size();
 
 			// 衝突判定をしていく
@@ -64,7 +64,7 @@ namespace QTreeRefine {
 				T* const p1 = lst[i];
 				const auto c1 = p1->GetCircle();
 
-				// スタックとセル
+				// スタックとノード
 				for (int j = 0; j < stack.size(); j++) {
 					const auto c2 = stack[j]->GetCircle();
 					if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
@@ -72,7 +72,7 @@ namespace QTreeRefine {
 						stack[j]->hit_count++;
 					}
 				}
-				// セル同士
+				// ノード同士
 				for (int j = i + 1; j < lst_size; j++) {
 					const auto c2 = lst[j]->GetCircle();
 					if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
@@ -113,10 +113,10 @@ namespace QTreeRefine {
 		}
 
 	private:
-		std::vector<T*> cell[sum_of_tree(MAX_D)]; // tree of vector<T*>
+		std::vector<T*> node[sum_of_tree(MAX_D)]; // tree of vector<T*>
 
-		// 深さとz値からセル番号を得る
-		static constexpr uint64 GetCellID(uint64_t depth, uint64_t z_value)
+		// 深さとz値からノード番号を得る
+		static constexpr uint64 GetNodeID(uint64_t depth, uint64_t z_value)
 		{
 			return  offset[depth] + z_value;
 		}
@@ -132,7 +132,7 @@ namespace QTreeRefine {
 		}
 
 		// 最大16bitの入力x, yから32bitのz値を得る
-		// x, yは最小分割単位のセルの上で左上から右にx, 下にy移動の意味
+		// x, yは最小分割単位のノードの上で左上から右にx, 下にy移動の意味
 		static constexpr uint64_t GetZ(uint64_t x, uint64_t y)
 		{
 			return (BitSeparate16(x) | (BitSeparate16(y) << 1));
@@ -160,9 +160,9 @@ namespace QTreeRefine {
 			return (int64_t)s_abyLog2[uVal & 0x1F];
 		}
 
-		// 対角の2点からセル番号を得る
+		// 対角の2点からノード番号を得る
 		// (x1, y1) <= (x2, y2)とする
-		static uint64 GetCellID(float x1, float y1, float x2, float y2)
+		static uint64 GetNodeID(float x1, float y1, float x2, float y2)
 		{
 			// 単位長方形の幅と高さ
 			constexpr float DX = static_cast<float>(WIN_W) / MAX_SPLIT(MAX_D);
