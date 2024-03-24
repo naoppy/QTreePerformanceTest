@@ -8,6 +8,13 @@ static inline const int N_LEN = 5;
 static inline constexpr int N_list[N_LEN] = { 100, 1000, 5000, 10000, 15000 };
 static inline constexpr int N_MAX = N_list[N_LEN - 1];
 
+using QTree::A2A::QTreeRefine;
+
+static void hit_func(MyObject* t1, MyObject* t2) {
+	t1->hit_count++;
+	t2->hit_count++;
+};
+
 void Main()
 {
 	Window::Resize(WIN_W, WIN_H);
@@ -33,7 +40,7 @@ void Main()
 	uint64_t total_time = 0;
 	uint64_t total_frame = 0;
 
-	QTreeRefine::QTreeRefine<3, MyObject, &MyObject::GetCircle> qtree;
+	QTreeRefine < 3, MyObject, &MyObject::GetCircle, &hit_func> qtree;
 
 	while (System::Update())
 	{
@@ -60,25 +67,25 @@ void Main()
 		 * 描画には 1/10 の 1666 microsec 程度か使えない
 		 */
 
-		/*
-		* ナイーブな手法では、オブジェクトがvectorで管理されているとしておく
-		* 80000 microsec per frame with N = 15000
-		* 36000 microsec per frame with N = 10000
-		* 9000 microsec per frame with N = 5000
-		* 360 microsec per frame with N = 1000
-		* 5 microsec per frame with N = 100
-		*/
-		//NaiveTest(obj_for_naive, N);
+		 /*
+		 * ナイーブな手法では、オブジェクトがvectorで管理されているとしておく
+		 * 80000 microsec per frame with N = 15000
+		 * 36000 microsec per frame with N = 10000
+		 * 9000 microsec per frame with N = 5000
+		 * 360 microsec per frame with N = 1000
+		 * 5 microsec per frame with N = 100
+		 */
+		 //NaiveTest(obj_for_naive, N);
 
-		/*
-		* 13500 microsec per frame with N = 15000
-		* 5300 microsec per frame with N = 10000
-		* 1200 microsec per frame with N = 5000
-		* 70 microsec per frame with N = 1000
-		* 5 microsec per frame with N = 100
-		* 木を作り直す際に、オブジェクトは使いまわす
-		*/
-		///*
+		 /*
+		 * 13500 microsec per frame with N = 15000
+		 * 5300 microsec per frame with N = 10000
+		 * 1200 microsec per frame with N = 5000
+		 * 70 microsec per frame with N = 1000
+		 * 5 microsec per frame with N = 100
+		 * 木を作り直す際に、オブジェクトは使いまわす
+		 */
+		 ///*
 		qtree.Cleanup();
 		for (int i = 0; i < N; i++) {
 			qtree.Push(obj_for_qtree[i].get());

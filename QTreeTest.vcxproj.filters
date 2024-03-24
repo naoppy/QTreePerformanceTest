@@ -821,5 +821,8 @@
     <ClInclude Include="qtree_normal_refine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="qtree_A2B.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

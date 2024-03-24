@@ -327,6 +327,7 @@
   <ItemGroup>
     <ClInclude Include="mycircle.h" />
     <ClInclude Include="naive.h" />
+    <ClInclude Include="qtree_A2B.h" />
     <ClInclude Include="qtree_normal_refine.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="window_def.h" />
