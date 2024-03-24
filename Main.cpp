@@ -33,7 +33,7 @@ void Main()
 	uint64_t total_time = 0;
 	uint64_t total_frame = 0;
 
-	QTreeRefine::QTreeRefine<MyObject, 3> qtree;
+	QTreeRefine::QTreeRefine<3, MyObject, &MyObject::GetCircle> qtree;
 
 	while (System::Update())
 	{

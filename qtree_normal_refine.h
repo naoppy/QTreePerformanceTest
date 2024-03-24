@@ -25,9 +25,10 @@ namespace QTreeRefine {
 
 	/*
 	 * T型のオブジェクトを格納する、最大深さMAX_Dの領域四分木
+	 * T型のオブジェクト同士の衝突判定を行う
 	 * 最大 2^16 x 2^16 までの分割(=MAX_D <=15)に対応
 	 */
-	template <typename T, unsigned int MAX_D>
+	template <unsigned int MAX_D, typename T, MyCircle (T::*member_func)() const>
 	class QTreeRefine
 	{
 	public:
@@ -36,7 +37,7 @@ namespace QTreeRefine {
 		 */
 		void Push(T* obj)
 		{
-			const auto c = obj->GetCircle();
+			const auto c = (obj->*member_func)();
 			const auto id = GetNodeID(c.x - c.r, c.y - c.r, c.x + c.r, c.y + c.r);
 			this->node[id].push_back(obj);
 		}
@@ -62,11 +63,11 @@ namespace QTreeRefine {
 			// 衝突判定をしていく
 			for (int i = 0; i < lst_size; i++) {
 				T* const p1 = lst[i];
-				const auto c1 = p1->GetCircle();
+				const auto c1 = (p1->*member_func)();
 
 				// スタックとノード
 				for (int j = 0; j < stack.size(); j++) {
-					const auto c2 = stack[j]->GetCircle();
+					const auto c2 = (stack[j]->*member_func)();
 					if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
 						p1->hit_count++;
 						stack[j]->hit_count++;
@@ -74,7 +75,7 @@ namespace QTreeRefine {
 				}
 				// ノード同士
 				for (int j = i + 1; j < lst_size; j++) {
-					const auto c2 = lst[j]->GetCircle();
+					const auto c2 = (lst[j]->*member_func)();
 					if (HitTestCircle(c1.x, c1.y, c1.r, c2.x, c2.y, c2.r)) {
 						p1->hit_count++;
 						lst[j]->hit_count++;
