@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "qtree_normal_refine.h"
+#include "qtree_A2A.h"
 
 namespace QTree::A2B {
 	/*

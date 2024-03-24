@@ -818,10 +818,13 @@
     <ClInclude Include="window_def.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="qtree_normal_refine.h">
+    <ClInclude Include="qtree_A2A.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="qtree_A2B.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qtree_A.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

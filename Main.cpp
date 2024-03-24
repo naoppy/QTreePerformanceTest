@@ -2,13 +2,15 @@
 #include "mycircle.h"
 #include "window_def.h"
 #include "naive.h"
-#include "qtree_normal_refine.h"
+#include "qtree_A2A.h"
+#include "qtree_A.h"
 
 static inline const int N_LEN = 5;
 static inline constexpr int N_list[N_LEN] = { 100, 1000, 5000, 10000, 15000 };
 static inline constexpr int N_MAX = N_list[N_LEN - 1];
 
-using QTree::A2A::QTreeRefine;
+using QTree::A2A::QTreeA2A;
+using QTree::A::QTreeA;
 
 void Main()
 {
@@ -30,15 +32,17 @@ void Main()
 		obj_for_qtree.push_back(std::move(std::make_shared<MyObject>(x, y, r)));
 	}
 	int now_idx = 0;
-	const RectF button{ Arg::center(Scene::CenterF().x, Scene::CenterF().y), 50 };
+	RectF button{ Arg::center(Scene::CenterF().x, Scene::CenterF().y), 50 };
 
 	uint64_t total_time = 0;
 	uint64_t total_frame = 0;
 
-	QTreeRefine < 3, MyObject, &MyObject::GetCircle> qtree([](MyObject* a, MyObject* b) {
+	QTreeA2A < 3, MyObject, &MyObject::GetCircle> qtree([](MyObject* a, MyObject* b) {
 		a->hit_count++;
 		b->hit_count++;
 	});
+
+	QTreeA < 3, MyObject, &MyObject::GetCircle> qtree2rect;
 
 	while (System::Update())
 	{
@@ -83,13 +87,28 @@ void Main()
 		 * 5 microsec per frame with N = 100
 		 * 木を作り直す際に、オブジェクトは使いまわす
 		 */
-		 ///*
+		/*
 		qtree.Cleanup();
 		for (int i = 0; i < N; i++) {
 			qtree.Push(obj_for_qtree[i].get());
 		}
 		qtree.HitTest();
 		//*/
+
+		qtree2rect.Cleanup();
+		for (int i = 0; i < N; i++) {
+			qtree2rect.PushA(obj_for_qtree[i].get());
+		}
+		MyCircle button_hitbox { (float)button.centerX(), (float)button.centerY(), (float)button.w };
+		qtree2rect.HitTest(button_hitbox, [](MyObject* obj) {
+			obj->hit_count++;
+			return;
+		});
+		Circle circle{ 100, 200, 50 };
+		qtree2rect.HitTest(MyCircle{ (float)circle.x, (float)circle.y, (float)circle.r }, [](MyObject* obj) {
+			obj->hit_count++;
+			return;
+		});
 
 		total_time += Time::GetMicrosec() - t;
 

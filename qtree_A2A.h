@@ -6,7 +6,7 @@
 namespace QTree {
 
 	// 最大深さdepthの四分木のノード数, 1 + 4 + 16 + ... + 4^depth = {(2^2)^(depth+1)) - 1} / 3
-	static constexpr uint64_t sum_of_tree(const uint64_t depth) {
+	static constexpr uint64_t sum_of_tree(const int64_t depth) {
 		return ((((uint64_t)1) << (2 * depth + 2)) - 1) / 3;
 	}
 
@@ -76,13 +76,13 @@ namespace QTree {
 		 * 最大 2^16 x 2^16 までの分割(=MAX_D <=15)に対応
 		 */
 		template <unsigned int MAX_D, typename T, MyCircle(T::* member_func)() const>
-		class QTreeRefine
+		class QTreeA2A
 		{
 		private:
 			typedef std::function<void(T*, T*)> HitFunc;
 			
 		public:
-			QTreeRefine(HitFunc hit_func)
+			QTreeA2A(HitFunc hit_func)
 				: hit_func(hit_func) {}
 
 			/*
@@ -204,4 +204,4 @@ namespace QTree {
 		};
 	} // namespace A2A
 
-} // namespace QTreeRefine
+} // namespace QTreeA2A
